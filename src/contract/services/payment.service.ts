@@ -248,7 +248,9 @@ export class PaymentService {
     if (transaction.retryCount >= this.MAX_RETRY_COUNT) {
       await this.deactivateContract(transaction.contract)
     } else {
-      transaction.nextRetryPaymentDate = this.calculateNextRetryDate()
+      transaction.nextRetryPaymentDate = this.calculateNextRetryDate(
+        transaction.nextRetryPaymentDate || transaction.nextPaymentDate,
+      )
     }
 
     if (transaction.retryCount === 1) {
@@ -270,9 +272,12 @@ export class PaymentService {
     return date
   }
 
-  private calculateNextRetryDate(): Date {
-    const date = new Date()
+  private calculateNextRetryDate(lastRetryDate: Date): Date {
+    const date = new Date(lastRetryDate)
+    date.setUTCHours(0, 0, 0, 0)
     date.setDate(date.getDate() + this.RETRY_INTERVAL_DAYS)
+    console.log('date', date)
+
     return date
   }
 
