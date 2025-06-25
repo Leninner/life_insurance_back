@@ -146,13 +146,14 @@ export class PaymentService {
       .leftJoinAndSelect('transaction.contract', 'contract')
       .leftJoinAndSelect('contract.paymentMethod', 'paymentMethod')
       .where(
-        '(transaction.status = :pendingStatus AND DATE(transaction.nextPaymentDate) = DATE(:startDate)) OR ' +
-          '(transaction.status = :failedStatus AND transaction.retryCount < :maxRetryCount AND DATE(transaction.nextRetryPaymentDate) = DATE(:startDate))',
+        '(transaction.status = :pendingStatus AND DATE(transaction.nextPaymentDate) = DATE(:startDate) AND contract.status = :activeStatus) OR ' +
+          '(transaction.status = :failedStatus AND transaction.retryCount < :maxRetryCount AND DATE(transaction.nextRetryPaymentDate) = DATE(:startDate) AND contract.status = :activeStatus)',
         {
           pendingStatus: TransactionStatus.PENDING,
           failedStatus: TransactionStatus.FAILED,
           maxRetryCount: this.MAX_RETRY_COUNT,
           startDate: startDate.toISOString(),
+          activeStatus: ContractStatus.ACTIVE,
         },
       )
 
@@ -255,7 +256,9 @@ export class PaymentService {
 
     if (transaction.retryCount === 1) {
       transaction.contract.retireDate = this.calculateRetireDate(transaction.retryCount)
-      await this.contractRepository.save(transaction.contract)
+      await this.contractRepository.update(transaction.contract.id, {
+        retireDate: transaction.contract.retireDate,
+      })
     }
 
     await this.transactionRepository.save(transaction)
