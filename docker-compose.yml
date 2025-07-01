@@ -32,9 +32,22 @@ services:
     volumes:
       - life_insurance_sonarqube_data:/opt/sonarqube/data
 
+  jenkins:
+    image: jenkins/jenkins:latest
+    container_name: jenkinsGPS
+    ports:
+      - '8181:8080'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - jenkins_data:/var/jenkins_home
+    networks:
+      - life_insurance_network
+    user: root
+
 volumes:
   life_insurance_data:
   life_insurance_sonarqube_data:
+  jenkins_data:
 
 networks:
   life_insurance_network:

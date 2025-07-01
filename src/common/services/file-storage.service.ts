@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config'
 import * as fs from 'fs'
 import { StorageStrategy, FileMetadata, UploadedFileResult } from '../interfaces/storage.interface'
 import { S3StorageStrategy } from './s3-storage.strategy'
-import { LocalStorageStrategy } from './local-storage.strategy'
 
 @Injectable()
 export class FileStorageService {
@@ -12,11 +11,10 @@ export class FileStorageService {
   constructor(
     private readonly configService: ConfigService,
     private readonly s3Strategy: S3StorageStrategy,
-    private readonly localStrategy: LocalStorageStrategy,
   ) {
     // Choose the strategy based on config
     const storageType = this.configService.get<string>('STORAGE_TYPE') || 'local'
-    this.strategy = storageType === 's3' ? this.s3Strategy : this.localStrategy
+    this.strategy = storageType === 's3' ? this.s3Strategy : this.s3Strategy
   }
 
   /**
