@@ -43,21 +43,9 @@ pipeline {
             }
         }
         
-        stage('Pruebas y cobertura') {
+        stage('Pruebas') {
             steps {
-                sh 'npm run test:cov'
-            }
-            post {
-                always {
-                    publishHTML([
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'coverage',
-                        reportFiles: 'index.html',
-                        reportName: 'Cobertura de código'
-                    ])
-                }
+                sh 'npm run test'
             }
         }
     }
