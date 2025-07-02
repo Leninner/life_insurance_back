@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'leninner/life-insurance-back'
         DOCKER_TAG = 'latest'
-        DOCKER_HUB_USER = 'elvis00007' // 👈 Reemplaza con tu usuario real
+        DOCKER_HUB_USER = 'elvis00007' // tu usuario de DockerHub
     }
 
     stages {
@@ -22,46 +22,46 @@ pipeline {
 
         stage('Instalar dependencias') {
             steps {
-                sh 'npm ci'
+                bat 'npm ci'
             }
         }
 
         stage('Linting') {
             steps {
-                sh 'npm run lint || true' // evita que falle si no está configurado
+                bat 'npm run lint || exit 0'
             }
         }
 
         stage('Formatear código') {
             steps {
-                sh 'npm run format || true'
+                bat 'npm run format || exit 0'
             }
         }
 
         stage('Compilar') {
             steps {
-                sh 'npm run build'
+                bat 'npm run build'
             }
         }
 
         stage('Pruebas') {
             steps {
-                sh 'npm run test || true'
+                bat 'npm run test || exit 0'
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t $DOCKER_IMAGE:$DOCKER_TAG ."
+                bat "docker build -t %DOCKER_IMAGE%:%DOCKER_TAG% ."
             }
         }
 
         stage('Docker Push') {
             steps {
                 withCredentials([string(credentialsId: 'dockerhub-token', variable: 'DOCKER_TOKEN')]) {
-                    sh """
-                        echo "$DOCKER_TOKEN" | docker login -u '$DOCKER_HUB_USER' --password-stdin
-                        docker push $DOCKER_IMAGE:$DOCKER_TAG
+                    bat """
+                        echo %DOCKER_TOKEN% | docker login -u %DOCKER_HUB_USER% --password-stdin
+                        docker push %DOCKER_IMAGE%:%DOCKER_TAG%
                     """
                 }
             }
@@ -69,8 +69,8 @@ pipeline {
 
         stage('Desplegar en Kubernetes') {
             steps {
-                sh 'kubectl apply -f k8s/deployment.yaml'
-                sh 'kubectl apply -f k8s/service.yaml'
+                bat 'kubectl apply -f k8s\\deployment.yaml'
+                bat 'kubectl apply -f k8s\\service.yaml'
             }
         }
     }
