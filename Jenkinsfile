@@ -1,64 +1,45 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:20-alpine'
-            args '-u root'
-        }
+    agent any
+
+    tools {
+        nodejs 'Node20'
     }
-    
+
     stages {
         stage('Checkout') {
             steps {
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    userRemoteConfigs: [[
-                        url: 'https://github.com/Leninner/life_insurance_back.git'
-                    ]]
-                ])
+                checkout scm
             }
         }
-        
         stage('Instalar dependencias') {
             steps {
-                sh 'npm ci'
+                bat 'npm ci'
             }
         }
-        
-        stage('Linting') {
+        stage('Lint') {
             steps {
-                sh 'npm run lint'
+                bat 'npm run lint'
             }
         }
-        
-        stage('Formatear código') {
+        stage('Format') {
             steps {
-                sh 'npm run format'
+                bat 'npm run format'
             }
         }
-        
-        stage('Compilar') {
+        stage('Build') {
             steps {
-                sh 'npm run build'
+                bat 'npm run build'
             }
         }
-        
-        stage('Pruebas') {
+        stage('Test') {
             steps {
-                sh 'npm run test'
+                bat 'npm run test'
             }
         }
     }
-    
     post {
         always {
             cleanWs()
-        }
-        success {
-            echo 'Pipeline ejecutado exitosamente'
-        }
-        failure {
-            echo 'Pipeline falló'
         }
     }
 }
