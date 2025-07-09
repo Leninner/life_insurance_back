@@ -1,12 +1,11 @@
 pipeline {
-    agent any
-
-    environment {
-        DOCKER_IMAGE = 'leninner/life-insurance-back'
-        DOCKER_TAG = 'latest'
-        DOCKER_HUB_USER = 'elvis00007' // tu usuario de DockerHub
+    agent {
+        docker {
+            image 'node:20-alpine'
+            args '-u root'
+        }
     }
-
+    
     stages {
         stage('Checkout') {
             steps {
@@ -19,71 +18,47 @@ pipeline {
                 ])
             }
         }
-
+        
         stage('Instalar dependencias') {
             steps {
-                bat 'npm ci'
+                sh 'npm ci'
             }
         }
-
+        
         stage('Linting') {
             steps {
-                bat 'npm run lint || exit 0'
+                sh 'npm run lint'
             }
         }
-
+        
         stage('Formatear código') {
             steps {
-                bat 'npm run format || exit 0'
+                sh 'npm run format'
             }
         }
-
+        
         stage('Compilar') {
             steps {
-                bat 'npm run build'
+                sh 'npm run build'
             }
         }
-
+        
         stage('Pruebas') {
             steps {
-                bat 'npm run test || exit 0'
-            }
-        }
-
-        stage('Docker Build') {
-            steps {
-                bat "docker build -t %DOCKER_IMAGE%:%DOCKER_TAG% ."
-            }
-        }
-
-        stage('Docker Push') {
-            steps {
-                withCredentials([string(credentialsId: 'dockerhub-token', variable: 'DOCKER_TOKEN')]) {
-                    bat """
-                        echo %DOCKER_TOKEN% | docker login -u %DOCKER_HUB_USER% --password-stdin
-                        docker push %DOCKER_IMAGE%:%DOCKER_TAG%
-                    """
-                }
-            }
-        }
-
-        stage('Desplegar en Kubernetes') {
-            steps {
-                bat 'kubectl apply -f k8s\\deployment.yaml'
-                bat 'kubectl apply -f k8s\\service.yaml'
+                sh 'npm run test'
             }
         }
     }
-
+    
     post {
         always {
             cleanWs()
         }
         success {
-            echo '✅ Pipeline ejecutado exitosamente'
+            echo 'Pipeline ejecutado exitosamente'
         }
         failure {
-            echo '❌ Pipeline falló'
+            echo 'Pipeline falló'
         }
     }
 }
